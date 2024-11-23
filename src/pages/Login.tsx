@@ -5,7 +5,7 @@ import Button from "../components/Button";
 import { object, string } from "yup";
 import { useNavigate } from "react-router-dom";
 import { SIGNUP_ROUTE } from "../constants/appConstants";
-import logo from "../../public/logo.png";
+import logo from "../../src/assets/images/logo.png";
 
 const LoginValidation = object({
   username: string()
@@ -19,13 +19,10 @@ export default function Login() {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-gray-100 w-full min-h-screen flex flex-col items-center justify-center font-mono bg-[url('../src/assets/images/login.png')] bg-cover bg-center">
-      {/* <div className="mb-4">
+    <div className="bg-gray-100 w-full min-h-screen flex flex-col gap-y-2 items-center justify-center font-mono bg-[url('../src/assets/images/login.png')] bg-cover bg-center">
+      <div>
         <img src={logo} alt="iAssistant Logo" className="w-24 h-24 md:w-32 md:h-32 rounded-full object-contain" />
-      </div> */}
-      <p className="text-white font-bold text-3xl md:text-4xl p-4 md:p-8 text-center mt-4">
-        Welcome to iAssistant!
-      </p>
+      </div>
       <div className="bg-white rounded-lg shadow-md p-6 w-3/5 max-w-md">
         <h3 className="text-lg text-center font-bold mb-4 text-gray-800">Login to Proceed</h3>
         <Formik

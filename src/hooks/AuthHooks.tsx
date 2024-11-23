@@ -10,7 +10,7 @@ export default function useLogin() {
       username: string;
       password: string;
     }) => {
-      return await ApiService.post("/auth/authenticate", {
+      return await ApiService.post("/auth/login", {
         username,
         password,
       }).then((response) => {
