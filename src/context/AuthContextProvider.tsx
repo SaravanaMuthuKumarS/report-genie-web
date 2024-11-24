@@ -2,33 +2,15 @@ import { createContext, useState } from "react";
 import useLogin from "../hooks/AuthHooks";
 import { useNavigate } from "react-router-dom";
 import { HOME_ROUTE } from "../constants/appConstants";
-
-export interface AuthContextType {
-  isAuthenticated: boolean;
-  isFinance: boolean;
-  userId: number;
-  isRetry: boolean;
-  accessToken: string;
-  setUserId: (userId: number) => void;
-  setIsAuthenticated: (isAuthenticated: boolean) => void;
-  setIsFinance: (isAdmin: boolean) => void;
-  handleLogin: ({
-    username,
-    password,
-  }: {
-    username: string;
-    password: string;
-  }) => void;
-  handleSignup: () => void;
-}
+import { AuthContextType } from "../types/appTypes";
 
 export const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isFinance: false,
-  userId: 0,
+  userName: "",
   isRetry: false,
   accessToken: "",
-  setUserId: () => { },
+  setUserName: () => { },
   setIsAuthenticated: () => { },
   setIsFinance: () => { },
   handleLogin: () => { },
@@ -43,7 +25,7 @@ export default function AuthContextProvider({
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isFinance, setIsFinance] = useState<boolean>(false);
   const [isRetry, setRetry] = useState<boolean>(false);
-  const [userId, setUserId] = useState<number>(0);
+  const [userName, setUserName] = useState<string>("");
   const [accessToken, setAccessToken] = useState<string>("");
   const { mutate } = useLogin();
   const navigate = useNavigate();
@@ -65,6 +47,7 @@ export default function AuthContextProvider({
           onSuccess: () => {
             const token: string = localStorage.getItem("accessToken")!;
             setAccessToken(token);
+            setUserName(username);
             setRetry(false);
             navigate(HOME_ROUTE);
           },
@@ -84,10 +67,10 @@ export default function AuthContextProvider({
         setIsAuthenticated,
         isRetry,
         accessToken,
-        userId,
+        userName,
         isFinance,
         setIsFinance,
-        setUserId,
+        setUserName,
         handleLogin,
         handleSignup,
       }}

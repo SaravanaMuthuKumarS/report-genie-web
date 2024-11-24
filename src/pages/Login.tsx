@@ -1,11 +1,12 @@
 import { useContext } from "react";
-import { AuthContext, AuthContextType } from "../context/AuthContextProvider";
+import { AuthContext } from "../context/AuthContextProvider";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import Button from "../components/Button";
 import { object, string } from "yup";
 import { useNavigate } from "react-router-dom";
 import { SIGNUP_ROUTE } from "../constants/appConstants";
 import logo from "../../src/assets/images/logo.png";
+import { AuthContextType } from "../types/appTypes";
 
 const LoginValidation = object({
   username: string()

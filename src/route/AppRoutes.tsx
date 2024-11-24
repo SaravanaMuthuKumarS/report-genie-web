@@ -12,12 +12,16 @@ import Home from "../pages/Home";
 import Login from "../pages/Login";
 import SignIn from "../pages/Signup";
 import ConsolidationReport from "../pages/ConsolidationReport";
+import Welcome from "../pages/Welcome";
+import FinanceReport from "../pages/FinanceReport";
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path={HOME_ROUTE} element={<Home />}>
       <Route path="consolidation" element={<ConsolidationReport />} />
+      <Route path="reports" element={<FinanceReport />} />
+      <Route index element={<Welcome />} />
       </Route>
       <Route path={ROOT_ROUTE} element={<AppLayout />}>
         <Route
