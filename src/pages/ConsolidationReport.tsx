@@ -2,11 +2,13 @@ import { useContext, useState } from "react";
 import { clients, projects, months } from "../constants/appConstants";
 import { AuthContextType } from "../types/appTypes";
 import { AuthContext } from "../context/AuthContextProvider";
+import Comparator from "./Comparator";
 // import useGetProjects from "../hooks/useGetProjects";
 
 export default function ConsolidationReport() {
   // const { data } = useGetProjects();
   const { userName } = useContext<AuthContextType>(AuthContext);
+  const [excelData, setExcelData] = useState<any[]>(null);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 20 }, (_, i) => currentYear - i); // Last 20 years
@@ -159,6 +161,17 @@ export default function ConsolidationReport() {
 
         </div>
       </div>
+      <Comparator excelData={excelData} setExcelData={setExcelData}/>
+      {excelData && (
+            <div className="mt-4 md:w-full flex justify-end">
+                <button 
+                    onClick={() => console.log("Save to backend")}
+                    className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+                >
+                    Save Data
+                </button>
+            </div>
+        )}      
     </div>
   );
 }

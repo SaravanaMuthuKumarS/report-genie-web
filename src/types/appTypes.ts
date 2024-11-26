@@ -15,6 +15,8 @@ export interface AuthContextType {
       password: string;
     }) => void;
     handleSignup: () => void;
+    isDataUploaded: boolean;
+    setIsDataUploaded: (isDataUploaded: boolean) => void;
   }
 
   export interface Project {
