@@ -15,6 +15,8 @@ export const AuthContext = createContext<AuthContextType>({
   setIsFinance: () => { },
   handleLogin: () => { },
   handleSignup: () => { },
+  isDataUploaded: false,
+  setIsDataUploaded: () => {},
 });
 
 export default function AuthContextProvider({
@@ -27,6 +29,7 @@ export default function AuthContextProvider({
   const [isRetry, setRetry] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("");
   const [accessToken, setAccessToken] = useState<string>("");
+  const [isDataUploaded, setIsDataUploaded] = useState<boolean>(false);
   const { mutate } = useLogin();
   const navigate = useNavigate();
 
@@ -73,6 +76,8 @@ export default function AuthContextProvider({
         setUserName,
         handleLogin,
         handleSignup,
+        setIsDataUploaded,
+        isDataUploaded
       }}
     >
       {children}
