@@ -1,13 +1,25 @@
-import "../scss/button.scss";
-
 interface ButtonProps {
   click?: () => void;
   title: string;
+  disable?: boolean;
 }
 
-export default function Button({ title, click = () => {} }: ButtonProps) {
+export default function Button({
+  title,
+  click = () => {},
+  disable = false,
+}: ButtonProps) {
   return (
-    <button className="w-20 bg-blue-600 text-white py-1 rounded-lg hover:bg-blue-700 transition" onClick={click} type="submit">
+    <button
+      type="submit"
+      disabled={disable}
+      className={`w-max py-2 px-4 transition rounded-lg ${
+        disable
+          ? "bg-gray-400 text-gray-600 cursor-not-allowed opacity-50"
+          : "bg-blue-600 text-white hover:bg-blue-700"
+      }`}
+      onClick={click}
+    >
       {title}
     </button>
   );

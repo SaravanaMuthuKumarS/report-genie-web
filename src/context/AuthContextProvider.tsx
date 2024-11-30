@@ -1,5 +1,5 @@
 import { createContext, useState } from "react";
-import useLogin from "../hooks/AuthHooks";
+import useLogin, { useSignup } from "../hooks/AuthHooks";
 import { useNavigate } from "react-router-dom";
 import { HOME_ROUTE } from "../constants/appConstants";
 import { AuthContextType } from "../types/appTypes";
@@ -30,10 +30,41 @@ export default function AuthContextProvider({
   const [userName, setUserName] = useState<string>("");
   const [accessToken, setAccessToken] = useState<string>("");
   const [isDataUploaded, setIsDataUploaded] = useState<boolean>(false);
-  const { mutate } = useLogin();
+  const { mutate: loginMutate } = useLogin();
+  const { mutate: signupMutate } = useSignup();
   const navigate = useNavigate();
 
-  async function handleSignup() {
+  async function handleSignup({ 
+    fullName, 
+    password,
+    mailId, 
+    projects, 
+    isFinance
+  } :
+  {
+    fullName: string;
+    password: string;
+    mailId: string;
+    projects: {id:string}[];
+    isFinance: boolean;
+  }) {
+    try {
+      await signupMutate({ fullName, password, mailId, projects, isFinance },
+        {
+          onSuccess: () => {
+            const token: string = localStorage.getItem("accessToken")!;
+            setAccessToken(token);
+            setUserName(mailId);
+            setRetry(false);
+            navigate(HOME_ROUTE);
+          },
+        }
+      );
+    } catch (error) {
+      setRetry(true);
+      localStorage.removeItem("accessToken");
+      alert("Username Password Mismatch");
+    }
     
   }
 
@@ -45,7 +76,7 @@ export default function AuthContextProvider({
     password: string;
   }) {
     try {
-      await mutate({ username, password },
+      await loginMutate({ username, password },
         {
           onSuccess: () => {
             const token: string = localStorage.getItem("accessToken")!;

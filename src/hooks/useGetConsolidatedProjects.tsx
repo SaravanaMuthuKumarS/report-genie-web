@@ -1,16 +1,20 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { Project } from "../types/appTypes";
+import { AppContextType, Project } from "../types/appTypes";
+import { ApiService } from "../service/ApiService";
+import { useContext } from "react";
+import { AppContext } from "../context/AppContextProvider";
 
 export default function useGetConsolidatedProjects(
 ): UseQueryResult<Project[]> {
+  const { setConsolidatedProjects } = useContext<AppContextType>(AppContext);
   return useQuery({
     staleTime: 5000,
     gcTime:6000,
-    queryKey: ["projects"],
+    queryKey: ["consolidatedProjects"],
     queryFn: async () => {
-      return await fetch("").then(
-        (response) => response.json()
-      );
+      return await ApiService.get("/projects/consolidated").then((response) => {
+        setConsolidatedProjects(response.data.entity.projects);
+      });
     },
     refetchInterval: 7000,
   });

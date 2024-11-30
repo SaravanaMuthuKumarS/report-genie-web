@@ -1,25 +1,21 @@
 import { useContext } from "react";
 import Select from "react-select";
-import { AuthContext, AuthContextType } from "../context/AuthContextProvider";
+import { AuthContext } from "../context/AuthContextProvider";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import Button from "../components/Button";
-import { array, boolean, object, string } from "yup";
+import { boolean, object, string } from "yup";
 import { useNavigate } from "react-router-dom";
-import { LOGIN_ROUTE } from "../constants/appConstants";
+import { LOGIN_ROUTE, dummyProjects } from "../constants/appConstants";
+import { AuthContextType } from "../types/appTypes";
 
 const SignupValidation = object({
   fullName: string()
     .required("Full Name is required")
     .matches(/^[a-zA-Z\s]+$/, "Full Name must contain only letters and spaces"),
-  mailId: string()
-    .email("Invalid Email Provided")
-    .required("Email is required"),
+  mailId: string().email("Invalid Email Provided").required("Email is required"),
   password: string()
     .required("Password is required")
     .min(8, "Password must be at least 8 characters long"),
-  setOfProjects: array()
-    .of(string())
-    .required("At least one project must be selected"),
   isFinance: boolean()
     .required("Finance status is required")
     .oneOf([true, false], "Finance status must be true or false"),
@@ -30,137 +26,171 @@ export default function SignIn() {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-gray-100 w-screen h-screen flex flex-col items-center justify-center font-mono bg-[url('../src/assets/images/login.png')]">
-      <p className="text-white font-bold text-4xl mb-8">Welcome to iAssistant!</p>
-      <div className="bg-gray-200 rounded-lg shadow-md px-10 pt-6">
-        <h3 className="text-lg text-center font-bold mb-4">SignUp New User !</h3>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center font-sans bg-cover bg-center bg-[url('../src/assets/images/login.png')]">
+      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-4xl">
+        <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
+          Welcome to iAssistant!
+        </h2>
+        <h3 className="text-lg text-center font-medium text-gray-600 mb-5">
+          Sign Up
+        </h3>
         <Formik
-          initialValues={{ fullName: "", password: "", mailId: "", setOfProjects: [], isFinance: false }}
+          initialValues={{
+            fullName: "",
+            password: "",
+            mailId: "",
+            projects: [] as { id: string }[],
+            isFinance: false,
+          }}
           validationSchema={SignupValidation}
           onSubmit={(values, { setSubmitting }) => {
-            console.log(values.setOfProjects);
-            handleSignup();
+            handleSignup({
+              fullName: values.fullName,
+              password: values.password,
+              mailId: values.mailId,
+              projects: values.projects,
+              isFinance: values.isFinance,
+            });
             setSubmitting(false);
           }}
         >
-          {({ errors, touched }) => (
+          {() => (
             <Form>
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="fullName">Full Name:</label>
-                  <Field
-                    className="px-2 rounded"
-                    type="text"
-                    name="fullName"
-                    id="fullName"
-                    placeholder="Enter Your Full Name"
-                  />
-                  {errors.fullName && touched.fullName && (
-                    <ErrorMessage name="fullName" component="div" className="text-red-500" />
-                  )}
+              <div className="flex gap-6 justify-between">
+                {/* Left Side Fields */}
+                <div className="flex flex-col w-full sm:w-1/2 space-y-6">
+                  {/* Full Name */}
+                  <div className="flex flex-col">
+                    <label htmlFor="fullName" className="text-sm font-medium text-gray-600">
+                      Full Name
+                    </label>
+                    <Field
+                      className="px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                      type="text"
+                      name="fullName"
+                      id="fullName"
+                      placeholder="Enter your full name"
+                    />
+                    <ErrorMessage
+                      name="fullName"
+                      component="div"
+                      className="text-xs text-red-500 mt-1"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="flex flex-col">
+                    <label htmlFor="mailId" className="text-sm font-medium text-gray-600">
+                      Email
+                    </label>
+                    <Field
+                      className="px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                      type="email"
+                      name="mailId"
+                      id="mailId"
+                      placeholder="Enter your email"
+                    />
+                    <ErrorMessage
+                      name="mailId"
+                      component="div"
+                      className="text-xs text-red-500 mt-1"
+                    />
+                  </div>
+
+                  {/* Password */}
+                  <div className="flex flex-col">
+                    <label htmlFor="password" className="text-sm font-medium text-gray-600">
+                      Password
+                    </label>
+                    <Field
+                      className="px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                      type="password"
+                      name="password"
+                      id="password"
+                      placeholder="Enter your password"
+                    />
+                    <ErrorMessage
+                      name="password"
+                      component="div"
+                      className="text-xs text-red-500 mt-1"
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="mailId">Mail ID:</label>
-                  <Field
-                    className="px-2 rounded"
-                    type="email"
-                    name="mailId"
-                    id="mailId"
-                    placeholder="Enter Your Email"
-                  />
-                  {errors.mailId && touched.mailId && (
-                    <ErrorMessage name="mailId" component="div" className="text-red-500" />
-                  )}
-                </div>
+                {/* Right Side Fields */}
+                <div className="flex flex-col w-full sm:w-1/2 space-y-6">
+                  {/* Projects */}
+                  <div className="flex flex-col">
+                    <label htmlFor="setOfProjects" className="text-sm font-medium text-gray-600">
+                      Projects
+                    </label>
+                    <Field name="setOfProjects">
+                      {({ field, form }: any) => (
+                        <Select
+                          isMulti
+                          options={dummyProjects.map((project) => ({
+                            value: project.id,
+                            label: project.name,
+                          }))}
+                          className="basic-multi-select"
+                          classNamePrefix="select"
+                          name={field.name}
+                          id="projects"
+                          value={field.value?.map((selectedProject: { id: string }) => ({
+                            value: selectedProject.id,
+                            label:
+                              dummyProjects.find((p) => p.id === selectedProject.id)?.name || "",
+                          }))}
+                          onChange={(selectedOptions) => {
+                            const selectedValues = selectedOptions.map((option: { value: string }) => ({
+                              id: option.value,
+                            }));
+                            form.setFieldValue(field.name, selectedValues);
+                          }}
+                        />
+                      )}
+                    </Field>
+                  </div>
 
-                <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="password">Password:</label>
-                  <Field
-                    className="px-2 rounded"
-                    type="password"
-                    name="password"
-                    id="password"
-                    placeholder="Enter Password"
-                  />
-                  {errors.password && touched.password && (
-                    <ErrorMessage name="password" component="div" className="text-red-500" />
-                  )}
+                  {/* Finance Checkbox */}
+                  <div className="flex items-center gap-2">
+                    <Field
+                      className="w-4 h-4 rounded focus:ring-2 focus:ring-blue-400"
+                      type="checkbox"
+                      name="isFinance"
+                      id="isFinance"
+                    />
+                    <label htmlFor="isFinance" className="text-sm font-medium text-gray-600">
+                      Is Finance
+                    </label>
+                  </div>
                 </div>
-
-                <div className="flex items-center justify-between w-96 gap-2">
-                  <label htmlFor="setOfProjects">Set of Projects:</label>
-                  <Field
-                    name="setOfProjects"
-                  >
-                    {({ field, form }: any) => (
-                      <Select
-                        isMulti
-                        options={[
-                          { value: "project1", label: "Project 1" },
-                          { value: "project2", label: "Project 2" },
-                          { value: "project3", label: "Project 3" },
-                          { value: "project4", label: "Project 4" },
-                          { value: "project5", label: "Project 5" },
-                          { value: "project6", label: "Project 6" },
-                          { value: "project7", label: "Project 7" },
-                          { value: "project8", label: "Project 8" },
-                        ]}
-                        className="px-2 rounded"
-                        name={field.name}
-                        id="setOfProjects"
-                        value={field.value.map((val: any) => ({
-                          value: val,
-                          label: `Project ${val.slice(-1)}`,
-                        }))}
-                        onChange={(selectedOptions) => {
-                          const selectedValues = selectedOptions.map((option) => option.value);
-                          form.setFieldValue(field.name, selectedValues);
-                        }}
-                        styles={{
-                          valueContainer: (provided) => ({
-                            ...provided,
-                            maxHeight: "80px",
-                            overflowY: "auto",
-                          }),
-                        }}
-                      />
-                    )}
-                  </Field>
-                  {errors.setOfProjects && touched.setOfProjects && (
-                    <ErrorMessage name="setOfProjects" component="div" className="text-red-500" />
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="isFinance">Is Finance:</label>
-                  <Field
-                    className="pt-2 rounded w-5 h-5"
-                    type="checkbox"
-                    name="isFinance"
-                    id="isFinance"
-                  />
-                  {errors.isFinance && touched.isFinance && (
-                    <ErrorMessage name="isFinance" component="div" className="text-red-500" />
-                  )}
-                </div>
-
-                <div className="flex items-center justify-center cursor-pointer mt-1">
-                  <Button title="Submit" />
-                </div>
-
-                {isRetry && (
-                  <p className="text-red-500 text-center mt-2">Wrong Credentials, Retry!</p>
-                )}
               </div>
+
+              {/* Submit Button */}
+              <div className="mt-6 w-full flex justify-center">
+                <Button title="Sign Up" />
+              </div>
+
+              {/* Retry Error */}
+              {isRetry && (
+                <p className="text-xs text-red-500 text-center mt-2 w-full">
+                  Invalid credentials, please try again!
+                </p>
+              )}
             </Form>
           )}
         </Formik>
-        <div className="flex items-center justify-around gap-4 mb-4">
-          <p className="text-lg mt-3 text-black">
-            Already a User ?
-          </p>
-          <Button title="Login" click={() => navigate(LOGIN_ROUTE)} />
+
+        {/* Login Redirect */}
+        <div className="flex justify-center mt-6">
+          <p className="text-xs text-gray-600">Already have an account?</p>
+          <button
+            onClick={() => navigate(LOGIN_ROUTE)}
+            className="ml-2 text-xs font-medium text-blue-600 hover:underline"
+          >
+            Login
+          </button>
         </div>
       </div>
     </div>

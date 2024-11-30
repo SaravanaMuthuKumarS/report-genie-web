@@ -1,162 +1,313 @@
 import { useState } from "react";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
+import {
+  HOME_ROUTE,
+  predefinedData,
+  predefinedHeaders,
+} from "../constants/appConstants";
+import Button from "../components/Button";
+import { useNavigate } from "react-router-dom";
 
 interface ComparisonComponentProps {
-    excelData: any[];
-    setExcelData: (data: any[]) => void;
+  excelData: any[] | null;
+  setExcelData: (data: any[] | null) => void;
 }
 
-export default function ComparisonComponent({ excelData, setExcelData }: ComparisonComponentProps) {
-    const [excelFile, setExcelFile] = useState<ArrayBuffer | null>(null);
-    const [typeError, setTypeError] = useState<string | null>(null);
-    const [isAccordionOpen, setIsAccordionOpen] = useState(true);
+interface TableProps {
+  headers: string[];
+  data: any[];
+  highlightMismatch?: (row: any, key?: string) => boolean;
+  individualPay?: boolean;
+  individualPayValues?: { [key: number]: number };
+  handlePayChange?: (rowIndex: number, value: number) => void;
+}
 
-    const predefinedData = [
-        { name: "John Doe", project: "Project Alpha", client: "Client A", billable: 40, nonBillable: 10, leaves: 5 },
-        { name: "Jane Smith", project: "Project Beta", client: "Client B", billable: 30, nonBillable: 5, leaves: 3 },
-    ];
+export const Table = ({ headers, data, highlightMismatch, individualPay, handlePayChange, individualPayValues }: TableProps) => {
 
-    const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0];
-        if (selectedFile) {
-            if (selectedFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-                selectedFile.type === 'application/vnd.ms-excel') {
-                setTypeError(null);
-                const reader = new FileReader();
-                reader.readAsArrayBuffer(selectedFile);
-                reader.onload = () => {
-                    setExcelFile(reader.result as ArrayBuffer);
-                };
-            } else {
-                setTypeError('Please select only Excel file types');
-                setExcelFile(null);
-            }
-        }
-    };
-
-    const handleFileSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        if (excelFile !== null) {
-            const workbook = XLSX.read(excelFile, { type: 'array' });
-            const worksheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[worksheetName];
-            const data = XLSX.utils.sheet_to_json(worksheet);
-
-            setExcelData(data); 
-        }
-    };
-
-    return (
-        <div className="flex flex-col md:flex-row p-6 space-y-4 md:space-y-0 md:space-x-4">
-
-            <div className="md:w-1/2 mb-4 md:mb-0">
-                <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-                    <table className="min-w-full text-sm text-left text-gray-500 border border-gray-300">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th scope="col" className="px-2 py-1 border">Employee Name</th>
-                                <th scope="col" className="px-2 py-1 border">Project</th>
-                                <th scope="col" className="px-2 py-1 border">Client</th>
-                                <th scope="col" className="px-2 py-1 border">Billable</th>
-                                <th scope="col" className="px-2 py-1 border">Non-Billable</th>
-                                <th scope="col" className="px-2 py-1 border">No. of Leaves</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {predefinedData.map((row, index) => (
-                                <tr key={index} className="bg-white border-b hover:bg-gray-100">
-                                    <td className="px-2 py-1 whitespace-nowrap border">{row.name}</td>
-                                    <td className="px-2 py-1 whitespace-nowrap border">{row.project}</td>
-                                    <td className="px-2 py-1 whitespace-nowrap border">{row.client}</td>
-                                    <td className="px-2 py-1 whitespace-nowrap border">{row.billable}</td>
-                                    <td className="px-2 py-1 whitespace-nowrap border">{row.nonBillable}</td>
-                                    <td className="px-2 py-1 whitespace-nowrap border">{row.leaves}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div className={`md:w-1/2 bg-gray-100 rounded-lg shadow-md transition-all duration-300`}>
-                <div 
-                    onClick={() => setIsAccordionOpen(!isAccordionOpen)} 
-                    className={`p-4 cursor-pointer flex justify-between items-center ${isAccordionOpen ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                >
-                    <span>{isAccordionOpen ? 'Hide Uploaded Data' : 'Show Uploaded Data'}</span>
-                    <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        width="24" height="24" 
-                        fill="none" 
-                        viewBox="0 0 24 24"
-                        className={`transition-transform duration-300 ${isAccordionOpen ? 'transform rotate-180' : ''}`}
+  return (
+    <div className="relative overflow-x-auto sm:rounded-lg h-full bg-white shadow-md rounded-md">
+      <table className="min-w-full text-sm text-left text-gray-700 border border-gray-300">
+        <thead className="text-xs text-gray-600 uppercase bg-gray-100">
+          <tr>
+            {headers.map((header) => (
+              <th key={header} scope="col" className="px-4 py-2 border-b">
+                {header}
+              </th>
+            ))}
+            {individualPay && <th className="px-4 py-2 border-b">Pay per Hour</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, rowIndex) => {
+            const isRowMismatch = highlightMismatch ? highlightMismatch(row) : false;
+            return (
+              <tr
+                key={rowIndex}
+                className={`bg-white border-b hover:bg-gray-50 ${isRowMismatch && "bg-red-100"}`}
+              >
+                {Object.entries(row).map(([key, value], colIndex) => {
+                  const isColumnMismatch = highlightMismatch ? highlightMismatch(row, key) : false;
+                  return (
+                    <td
+                      key={colIndex}
+                      className={`px-4 py-2 whitespace-nowrap border-b ${isColumnMismatch ? "bg-red-300 font-bold" : ""}`}
                     >
-                        <path fill="#FFF" d="M12 16l4-4H8l4 4z"/>
-                    </svg>
-                </div>
+                      {String(value)}
+                    </td>
+                  );
+                })}
+                {individualPay && (
+                  <td className="px-4 py-2 whitespace-nowrap border-b">
+                    <input
+                      type="text"
+                      value={individualPayValues![rowIndex] || ""}
+                      onChange={(e) => handlePayChange!(rowIndex, Number(e.target.value))}
+                      className="px-3 py-1 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      placeholder="Enter Amount"
+                    />
+                  </td>
 
-                {isAccordionOpen && (
-                    <div className={`p-4`}>
-                        {excelData ? (
-                            <>
-                                <table className="min-w-full bg-white border border-gray-300 mt-2">
-                                    <thead>
-                                        <tr>
-                                            {Object.keys(excelData[0]).map((key) => (
-                                                <th key={key} className="border px=4 py=  2">{key}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        {excelData.map((individualExcelData, index) => {
-                                            const predefinedRow = predefinedData.find(row => row.name === individualExcelData['Employee Name']);
-                                            const isMismatch =
-                                                predefinedRow &&
-                                                (predefinedRow.billable !== individualExcelData['Billable'] ||
-                                                 predefinedRow.nonBillable !== individualExcelData['Non-Billable'] ||
-                                                 predefinedRow.leaves !== individualExcelData['No. of Leaves']);
-
-                                            return (
-                                                <tr key={index} 
-                                                    className={`border-b ${isMismatch ? 'bg-red-200' : (index % 2 === 0 ? 'bg-gray-50' : 'bg-white')}`}>
-                                                    {Object.keys(individualExcelData).map((key) => (
-                                                        <td key={key} className="border px=4 py=  2">{individualExcelData[key]}</td>
-                                                    ))}
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-
-                                </table>
-                            </>
-                        ) : (
-                            <>
-                                <form onSubmit={handleFileSubmit}>
-                                    <h2 className="text-lg font-semibold mb-4">Upload File</h2>
-                                    <input 
-                                        type="file" 
-                                        accept=".xlsx, .xls"
-                                        required 
-                                        onChange={handleFile} 
-                                        className="block w-full text-sm text-gray-500 mb-4 border rounded-md p=2"
-                                    />
-                                    <button 
-                                        type="submit" 
-                                        className="w-full bg-blue-500 text-white py=2 rounded hover:bg-blue=600"
-                                    >
-                                        UPLOAD
-                                    </button>
-
-                                    {typeError && (
-                                        <div className="mt=4 text-red=600">{typeError}</div>
-                                    )}
-                                </form>
-                            </>
-                        )}
-                    </div>
                 )}
-            </div>            
-        </div>  
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default function Comparator({
+  excelData,
+  setExcelData,
+}: ComparisonComponentProps) {
+  const [excelFile, setExcelFile] = useState<ArrayBuffer | null>(null);
+  const [typeError, setTypeError] = useState<string | null>(null);
+  const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const sortData = (data: any[], key: string) => {
+    return data.sort((a, b) => {
+      if (a[key] < b[key]) return -1;
+      if (a[key] > b[key]) return 1;
+      return 0;
+    });
+  };
+
+  const sortedPredefinedData = sortData([...predefinedData], "name");
+  const sortedExcelData = excelData ? sortData([...excelData], "name") : [];
+
+  const handleConsolidate = () => {
+    setIsPopupOpen(true);
+  };
+
+  const handleYesClick = () => {
+    setIsPopupOpen(false);
+    navigate(HOME_ROUTE);
+  };
+
+  const handleNoClick = () => {
+    setIsPopupOpen(false);
+    navigate(HOME_ROUTE);
+  };
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      if (
+        selectedFile.type ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+        selectedFile.type === "application/vnd.ms-excel"
+      ) {
+        setTypeError(null);
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(selectedFile);
+        reader.onload = () => {
+          setExcelFile(reader.result as ArrayBuffer);
+        };
+      } else {
+        setTypeError("Please select only Excel file types");
+        setExcelFile(null);
+      }
+    }
+  };
+
+  const handleFileSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (excelFile !== null) {
+      const workbook = XLSX.read(excelFile, { type: "array" });
+      const worksheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[worksheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+      setExcelData(data);
+    }
+    setIsUploadOpen(true);
+  };
+
+  const hasAnyMismatch = (): boolean => {
+    return sortedPredefinedData.some((row) => {
+      const excelRow = sortedExcelData.find(
+        (item) => item["name"] === row["name"]
+      );
+      if (!excelRow) return false;
+      return (
+        excelRow.billable !== row.billable ||
+        excelRow.nonBillable !== row.nonBillable ||
+        excelRow.leaves !== row.leaves ||
+        excelRow.totalHours !== row.totalHours
+      );
+    });
+  };
+
+  const handleExcelMismatch = (
+    row: Record<string, any>,
+    key?: string
+  ): boolean => {
+    const predefinedRow = predefinedData.find(
+      (item) => item.name === row["name"]
     );
+    if (!predefinedRow) return false;
+    if (!key) {
+      return (
+        predefinedRow.billable !== row["billable"] ||
+        predefinedRow.nonBillable !== row["nonBillable"] ||
+        predefinedRow.leaves !== row["leaves"] ||
+        predefinedRow.totalHours !== row["totalHours"]
+      );
+    }
+    switch (key) {
+      case "billable":
+        return predefinedRow.billable !== row["billable"];
+      case "nonBillable":
+        return predefinedRow.nonBillable !== row["nonBillable"];
+      case "leaves":
+        return predefinedRow.leaves !== row["leaves"];
+      case "totalHours":
+        return predefinedRow.totalHours !== row["totalHours"];
+      default:
+        return false;
+    }
+  };
+
+  const handleTableMismatch = (
+    row: Record<string, any>,
+    key?: string
+  ): boolean => {
+    const excelRow = excelData!.find((item) => item.name === row["name"]);
+    if (!excelRow) return false;
+    if (!key) {
+      return (
+        excelRow.billable !== row["billable"] ||
+        excelRow.nonBillable !== row["nonBillable"] ||
+        excelRow.leaves !== row["leaves"] ||
+        excelRow.totalHours !== row["totalHours"]
+      );
+    }
+    switch (key) {
+      case "billable":
+        return excelRow.billable !== row["billable"];
+      case "nonBillable":
+        return excelRow.nonBillable !== row["nonBillable"];
+      case "leaves":
+        return excelRow.leaves !== row["leaves"];
+      case "totalHours":
+        return excelRow.totalHours !== row["totalHours"];
+      default:
+        return false;
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 flex-grow overflow-y-auto">
+        {isPopupOpen && (
+          <div
+            className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center"
+            style={{ zIndex: 9999 }}
+          >
+            <div className="bg-white p-6 rounded shadow-lg w-96">
+              <h2 className="text-lg font-bold mb-4">
+                Consolidation Sent to Finance Team
+              </h2>
+              <p className="mb-4">Do you need a local copy of the data?</p>
+              <div className="flex justify-end space-x-4">
+                <Button title="No" click={handleNoClick}></Button>
+                <Button title="Yes" click={handleYesClick}></Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className={`${isUploadOpen ? "w-1/2" : "w-full"} overflow-hidden`}>
+          {excelData ? (
+            <Table
+              headers={predefinedHeaders}
+              data={sortedPredefinedData}
+              highlightMismatch={handleTableMismatch}
+            />
+          ) : (
+            <Table headers={predefinedHeaders} data={sortedPredefinedData} />
+          )}
+        </div>
+
+        {isUploadOpen && (
+          <div className={"overflow-hidden"} style={{ width: 425 }}>
+            {excelData ? (
+              <>
+                <Table
+                  headers={predefinedHeaders}
+                  data={sortedExcelData}
+                  highlightMismatch={handleExcelMismatch}
+                />
+              </>
+            ) : (
+              <form onSubmit={handleFileSubmit} className="space-y-4">
+                <h2 className="text-lg font-semibold mb-4">Upload File</h2>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  required
+                  onChange={handleFile}
+                  className="block w-full text-sm text-gray-500 mb-4 border rounded-md p-2"
+                />
+                {typeError && (
+                  <div className="mt-4 text-red-600">{typeError}</div>
+                )}
+                <Button title="Compare" />
+              </form>
+            )}
+          </div>
+        )}
+      </div>
+
+      {!isUploadOpen ? (
+        <div className="flex justify-around w-full p-4">
+          <Button title="Instant Consolidation" click={handleConsolidate} />
+          <Button title="Upload Sheet" click={() => setIsUploadOpen(true)} />
+        </div>
+      ) : (
+        <div className="flex justify-around w-full p-4 items-center space-x-4">
+          <div>
+            {hasAnyMismatch() && (
+              <span className="text-red-600 font-bold text-sm text-center mr-4">
+                Resolve to Consolidate
+              </span>
+            )}
+            <Button
+              title="Consolidate"
+              click={handleConsolidate}
+              disable={hasAnyMismatch()}
+            />
+          </div>
+          {excelData && (
+            <Button title="Back" click={() => setExcelData(null)} />
+          )}
+          {excelData === null && isUploadOpen && (
+            <Button title="Back" click={() => setIsUploadOpen(false)} />
+          )}
+        </div>
+      )}
+    </div>
+  );
 }

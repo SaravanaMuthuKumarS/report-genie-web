@@ -19,3 +19,32 @@ export default function useLogin() {
     },
   });
 }
+
+export function useSignup() {
+  return useMutation({
+    mutationFn: async ({ 
+      fullName, 
+      password,
+      mailId, 
+      projects, 
+      isFinance
+    } :
+    {
+      fullName: string;
+      password: string;
+      mailId: string;
+      projects: {id:string}[];
+      isFinance: boolean;
+    }) => {
+      return await ApiService.post("/auth/signup", {
+        fullName,
+        password,
+        mailId,
+        projects,
+        isFinance
+      }).then((response) => {
+        localStorage.setItem("accessToken", response.data.entity.accessToken);
+      }); 
+    },
+  });
+}
