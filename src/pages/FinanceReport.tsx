@@ -3,6 +3,8 @@ import { AuthContextType } from "../types/appTypes";
 import { AuthContext } from "../context/AuthContextProvider";
 import { predefinedHeaders, reportedProjects } from "../constants/appConstants";
 import { Table } from "./Comparator";
+import InvoiceDocument from "./InvoiceDocument";
+import { pdf } from "@react-pdf/renderer";
 
 export default function FinanceReport() {
   const { userName } = useContext<AuthContextType>(AuthContext);
@@ -25,24 +27,58 @@ export default function FinanceReport() {
     }
   };
 
-  const handleGenerateInvoice = (timesheet: any[]) => {
-    let updatedTimesheet = [...timesheet];
-
+  const handleGenerateInvoice = async (timesheet: any[], projectName: string) => {
+    // Generate the updated timesheet with calculated payable amounts
+    const updatedTimesheet = timesheet.map((row, rowIndex) => {
+      const rowPay = isIndividualPay
+        ? individualPayValues[rowIndex] || 0
+        : payPerHour;
+      return { ...row, pay: rowPay };
+    });
+  
+    console.log(updatedTimesheet); // Debugging
+  
     if (isIndividualPay) {
-      updatedTimesheet = updatedTimesheet.map((row, rowIndex) => {
-        const rowPay = individualPayValues[rowIndex] || 0;
-        return { ...row, pay: rowPay };
-      });
+      console.log(isIndividualPay, "isIndividualPay");
+      // Generate a single PDF for all individuals
+      const blob = await pdf(
+        <InvoiceDocument
+          userName="All Users"
+          project={projectName}
+          timesheet={updatedTimesheet}
+          payPerHour={payPerHour}
+        />
+      ).toBlob();
+  
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${projectName}_Individual_Invoices.pdf`;
+      link.click();
     } else {
-      updatedTimesheet = updatedTimesheet.map((row) => ({
-        ...row,
-        pay: payPerHour,
-      }));
+      // Generate and download separate PDFs for each entry in the timesheet
+      for (const val of timesheet) {
+        const blob = await pdf(
+          <InvoiceDocument
+            userName={val.name}
+            project={val.project}
+            timesheet={[val]} // Single entry
+            payPerHour={payPerHour}
+          />
+        ).toBlob();
+  
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${val.name}_Invoice.pdf`;
+        link.click();
+      }
     }
-
-    console.log(updatedTimesheet);
+  
+    // Show success popup
     setPopUp(true);
   };
+  
 
   const handlePayChange = (rowIndex: number, value: number) => {
     setIndividualPayValues((prevValues) => ({
@@ -145,7 +181,7 @@ export default function FinanceReport() {
                         {/* Generate Invoice Button */}
                         <div className="flex flex-col gap-2 mt-4">
                           <button
-                            onClick={() => handleGenerateInvoice(project.timesheet)}
+                            onClick={() => handleGenerateInvoice(project.timesheet, project.name)}
                             className="px-4 py-1 text-sm text-white bg-pink-500 rounded-md hover:bg-pink-600 focus:ring-2 focus:ring-pink-300"
                           >
                             Generate Invoice

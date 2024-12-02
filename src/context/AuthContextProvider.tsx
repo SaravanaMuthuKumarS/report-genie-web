@@ -25,7 +25,7 @@ export default function AuthContextProvider({
   children: React.ReactNode;
 }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isFinance, setIsFinance] = useState<boolean>(false);
+  const [isFinance, setIsFinance] = useState<boolean>(true);
   const [isRetry, setRetry] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("");
   const [accessToken, setAccessToken] = useState<string>("");
