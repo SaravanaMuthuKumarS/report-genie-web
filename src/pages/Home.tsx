@@ -26,7 +26,7 @@ export default function Home() {
           >
             Home
           </li>
-          {true ? (
+          {false ? (
             <li
               className="hover:bg-blue-600 p-3 rounded-md cursor-pointer transition duration-300 ease-in-out transform hover:scale-105"
               onClick={() => navigate("consolidation")}
