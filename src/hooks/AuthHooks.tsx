@@ -1,5 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { ApiService } from "../service/ApiService";
+import { useContext } from "react";
+import { AuthContextType } from "../types/appTypes";
+import { AuthContext } from "../context/AuthContextProvider";
 
 export default function useLogin() {
   return useMutation({
@@ -14,7 +17,8 @@ export default function useLogin() {
         username,
         password,
       }).then((response) => {
-        localStorage.setItem("accessToken", response.data.entity.accessToken);
+        localStorage.setItem("accessToken", response.data.response.token);
+        localStorage.setItem("role", response.data.response.isFinance);
       });
     },
   });
@@ -26,7 +30,7 @@ export function useSignup() {
       fullName, 
       password,
       mailId, 
-      projects, 
+      projects,
       isFinance
     } :
     {
@@ -36,14 +40,15 @@ export function useSignup() {
       projects: {id:string}[];
       isFinance: boolean;
     }) => {
-      return await ApiService.post("/auth/signup", {
+      return await ApiService.post("/auth/register", {
         fullName,
         password,
         mailId,
         projects,
         isFinance
       }).then((response) => {
-        localStorage.setItem("accessToken", response.data.entity.accessToken);
+        localStorage.setItem("role", response.data.response.isFinance);
+        localStorage.setItem("accessToken", response.data.response.token);
       }); 
     },
   });

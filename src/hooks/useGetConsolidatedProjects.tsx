@@ -13,7 +13,7 @@ export default function useGetConsolidatedProjects(
     queryKey: ["consolidatedProjects"],
     queryFn: async () => {
       return await ApiService.get("/projects/consolidated").then((response) => {
-        setConsolidatedProjects(response.data.entity.projects);
+        setConsolidatedProjects(response.data.response.projects);
       });
     },
     refetchInterval: 7000,

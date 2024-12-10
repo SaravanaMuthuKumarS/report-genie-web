@@ -1,21 +1,19 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { AppContextType, TimeSheet } from "../types/appTypes";
+import { TimeSheet } from "../types/appTypes";
 import { ApiService } from "../service/ApiService";
-import { AppContext } from "../context/AppContextProvider";
-import { useContext } from "react";
 
-export default function useGetTimeSheet(
+export default function useGetTimeSheet(props: { selectedYear: number, selectedFromMonth: string, selectedToMonth: string, selectedClient: string, selectedProject: string }
 ): UseQueryResult<TimeSheet[]> {
-  const { setTimeSheet } = useContext<AppContextType>(AppContext);
   return useQuery({
-    staleTime: 5000,
-    gcTime:6000,
-    queryKey: ["timeSheet"],
+    // staleTime: 500000,
+    // gcTime: 600000,
+    queryKey: ["timeSheet", props],
     queryFn: async () => {
-      return await ApiService.get("/timeSheet").then((response) => {
-        setTimeSheet(response.data.entity.timeSheet);
-      });
+      const response = await ApiService.post("/timesheets", props );
+      console.log(response.data.response.timesheets);
+      
+      return response.data.response.timesheets;
     },
-    refetchInterval: 7000,
+    // refetchInterval: 700000,
   });
 }

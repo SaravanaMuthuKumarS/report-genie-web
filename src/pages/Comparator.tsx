@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import {
   HOME_ROUTE,
-  predefinedData,
   predefinedHeaders,
 } from "../constants/appConstants";
 import Button from "../components/Button";
 import { useNavigate } from "react-router-dom";
+import { AppContextType, ExcelRow, TimeSheet } from "../types/appTypes";
+import { AppContext } from "../context/AppContextProvider";
 
 interface ComparisonComponentProps {
-  excelData: any[] | null;
-  setExcelData: (data: any[] | null) => void;
+  excelData: ExcelRow[];
+  setExcelData: (data: ExcelRow[]) => void;
 }
 
 interface TableProps {
@@ -81,22 +82,58 @@ export default function Comparator({
   excelData,
   setExcelData,
 }: ComparisonComponentProps) {
+  const { timeSheet } = useContext<AppContextType>(AppContext);
+
   const [excelFile, setExcelFile] = useState<ArrayBuffer | null>(null);
+  const [sortedExcelData, setSortedExcelData] = useState<ExcelRow[]>([]);
+  const [sortedTimesheetData, setSortedTimesheetData] = useState<TimeSheet[]>([]);
   const [typeError, setTypeError] = useState<string | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const navigate = useNavigate();
 
-  const sortData = (data: any[], key: string) => {
+  useEffect(() => {
+    if (timeSheet.length > 0) {
+      const filteredTimesheetData = timeSheet.map((row) => {
+        return {
+          id: row.id,
+          name: row.name,
+          billable: row.billable,
+          nonBillable: row.nonBillable,
+          leaves: row.leaves,
+          totalHours: row.totalHours,
+        };
+      });
+      const sortTimesheetData = sortedData([...filteredTimesheetData]);
+      setSortedTimesheetData(sortTimesheetData);
+    }
+  }, [timeSheet]);
+
+  useEffect(() => {
+    if (excelData.length > 0) {
+      const filteredExcelData = excelData.map((row) => {
+        return {
+          id: row.id,
+          name: row.name,
+          billable: row.billable,
+          nonBillable: row.nonBillable,
+          leaves: row.leaves,
+          totalHours: row.totalHours,
+        };
+      });
+      const sortExcelData = sortedData([...filteredExcelData]);
+      setSortedExcelData(sortExcelData);
+    }
+  }, [excelData]);
+
+  const sortedData = (data: any[]) => {
     return data.sort((a, b) => {
-      if (a[key] < b[key]) return -1;
-      if (a[key] > b[key]) return 1;
-      return 0;
+      const numA = parseInt(a.id);
+      const numB = parseInt(b.id);
+  
+      return numA - numB;
     });
   };
-
-  const sortedPredefinedData = sortData([...predefinedData], "name");
-  const sortedExcelData = excelData ? sortData([...excelData], "name") : [];
 
   const handleConsolidate = () => {
     setIsPopupOpen(true);
@@ -139,16 +176,16 @@ export default function Comparator({
       const workbook = XLSX.read(excelFile, { type: "array" });
       const worksheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[worksheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet);
+      const data: ExcelRow[] = XLSX.utils.sheet_to_json(worksheet);
       setExcelData(data);
     }
     setIsUploadOpen(true);
   };
 
   const hasAnyMismatch = (): boolean => {
-    return sortedPredefinedData.some((row) => {
+    return sortedTimesheetData.some((row) => {
       const excelRow = sortedExcelData.find(
-        (item) => item["name"] === row["name"]
+        (item) => item.id.toString() === row.id
       );
       if (!excelRow) return false;
       return (
@@ -164,8 +201,8 @@ export default function Comparator({
     row: Record<string, any>,
     key?: string
   ): boolean => {
-    const predefinedRow = predefinedData.find(
-      (item) => item.name === row["name"]
+    const predefinedRow = sortedTimesheetData.find(
+      (item) => item.id === row.id.toString()
     );
     if (!predefinedRow) return false;
     if (!key) {
@@ -194,7 +231,7 @@ export default function Comparator({
     row: Record<string, any>,
     key?: string
   ): boolean => {
-    const excelRow = excelData!.find((item) => item.name === row["name"]);
+    const excelRow = sortedExcelData.find((item) => item.id.toString() === row.id);
     if (!excelRow) return false;
     if (!key) {
       return (
@@ -243,17 +280,17 @@ export default function Comparator({
           {excelData ? (
             <Table
               headers={predefinedHeaders}
-              data={sortedPredefinedData}
+              data={sortedTimesheetData}
               highlightMismatch={handleTableMismatch}
             />
           ) : (
-            <Table headers={predefinedHeaders} data={sortedPredefinedData} />
+            <Table headers={predefinedHeaders} data={sortedTimesheetData} />
           )}
         </div>
 
         {isUploadOpen && (
           <div className={"overflow-hidden"} style={{ width: 425 }}>
-            {excelData ? (
+            {excelData.length > 0 ? (
               <>
                 <Table
                   headers={predefinedHeaders}
@@ -300,11 +337,15 @@ export default function Comparator({
               disable={hasAnyMismatch()}
             />
           </div>
-          {excelData && (
-            <Button title="Back" click={() => setExcelData(null)} />
+          {excelData.length == 0 && (
+            <Button title="Back" click={() => {
+              setIsUploadOpen(false);
+            }} />
           )}
-          {excelData === null && isUploadOpen && (
-            <Button title="Back" click={() => setIsUploadOpen(false)} />
+          {excelData.length > 0 && isUploadOpen && (
+            <Button title="Back" click={() => {
+              setExcelData([]);
+            }} />
           )}
         </div>
       )}

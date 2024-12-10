@@ -17,7 +17,7 @@ export default function Welcome() {
         <p className="text-xl md:text-2xl text-white mb-8 animate__animated animate__fadeIn animate__delay-2s">
           Your one-stop solution for smarter reporting and innvoice generation.
         </p>
-        <button onClick={() => false ? navigate("consolidation"): navigate("reports")} className="px-6 py-3 bg-yellow-500 text-white rounded-full text-xl font-semibold hover:bg-yellow-600 transform transition-all duration-300 ease-in-out hover:scale-105 animate__animated animate__fadeIn animate__delay-3s">
+        <button onClick={() => isFinance ? navigate("reports"): navigate("consolidation")} className="px-6 py-3 bg-yellow-500 text-white rounded-full text-xl font-semibold hover:bg-yellow-600 transform transition-all duration-300 ease-in-out hover:scale-105 animate__animated animate__fadeIn animate__delay-3s">
           Get Started
         </button>
       </div>

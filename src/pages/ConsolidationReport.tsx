@@ -1,47 +1,95 @@
-import { useContext, useState } from "react";
-import { dummyClients, dummyProjects, months } from "../constants/appConstants";
-import { AuthContextType } from "../types/appTypes";
+import { useContext, useEffect, useState } from "react";
+import { months } from "../constants/appConstants";
+import { AppContextType, AuthContextType, ExcelRow } from "../types/appTypes";
 import { AuthContext } from "../context/AuthContextProvider";
 import Comparator from "./Comparator";
+import useGetTimeSheet from "../hooks/useGetTimeSheet";
+import { AppContext } from "../context/AppContextProvider";
+import useGetClients from "../hooks/useGetClients";
+import useGetProjects from "../hooks/useGetProjects";
+import Select from "react-select";
 
 export default function ConsolidationReport() {
   const { userName } = useContext<AuthContextType>(AuthContext);
-  const [excelData, setExcelData] = useState<any[] | null>(null);
+  const { clients, projects, timeSheet, setTimeSheet, setClients, setProjects } = useContext<AppContextType>(AppContext);
+
+  const [excelData, setExcelData] = useState<any[]>([]);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 20 }, (_, i) => currentYear - i);
 
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  const [selectedFromMonth, setSelectedFromMonth] = useState(
-    months[new Date().getMonth()]
-  );
-  const [selectedToMonth, setSelectedToMonth] = useState(
-    months[new Date().getMonth()]
-  );
-  const [selectedClient, setSelectedClient] = useState("");
-  const [selectedProject, setSelectedProject] = useState("");
 
-  const [dummyBoolean, setDummyBoolean] = useState(false);
+  const [selectedFromMonth, setSelectedFromMonth] = useState(months[new Date().getMonth()]);
+  const [selectedToMonth, setSelectedToMonth] = useState(months[new Date().getMonth()]);
+  const [selectedClient, setSelectedClient] = useState<{ value: string; label: string } | null>(null);
+  const [selectedProject, setSelectedProject] = useState<{ value: string; label: string } | null>(null);
+  // const [filter, setFilter] = useState({
+  //   selectedYear,
+  //   selectedFromMonth,
+  //   selectedToMonth,
+  //   selectedClient,
+  //   selectedProject,
+  // });
+  const [shouldFetchTimeSheet, setShouldFetchTimeSheet] = useState(false); // New state for triggering API call
 
+  const { data: clientsData } = useGetClients();
+  const { data: projectsData } = useGetProjects();
+
+  const { data: timesheets, refetch: timeSheetRefetch } = useGetTimeSheet({
+    selectedYear,
+    selectedFromMonth,
+    selectedToMonth,
+    selectedClient: selectedClient ? selectedClient.value : '',
+    selectedProject: selectedProject ? selectedProject.value : '',
+  });
+
+  useEffect(() => {
+    if (clientsData && clientsData !== clients) {
+      setClients(clientsData);
+    }
+  }, [clientsData, clients, setClients]);
+
+  useEffect(() => {
+    if (projectsData && projectsData !== projects) {
+      setProjects(projectsData);
+    }
+  }, [projectsData, projects, setProjects]);
+
+  useEffect(() => {
+    if (shouldFetchTimeSheet) {
+      timeSheetRefetch();
+      setTimeSheet(timesheets!); // Assuming timesheets has data after refetch
+      setShouldFetchTimeSheet(false); // Reset after fetching
+    }
+  }, [shouldFetchTimeSheet, timeSheetRefetch, timesheets, setTimeSheet]);
+
+  // Trigger the fetch when filters are applied
   function handleFilter() {
-    // call useGetTimeSheet here
-    setDummyBoolean(true);
+    setShouldFetchTimeSheet(true); // Trigger the refetch
   }
+
+  const clientOptions = clients?.map(client => ({
+    value: client.id,
+    label: client.name,
+  }));
+
+  const projectOptions = projects?.map(project => ({
+    value: project.id,
+    label: project.name,
+  }));
 
   return (
     <div className="w-full bg-gray-100 p-6">
       <div className="text-3xl font-semibold text-gray-800 mb-6">
-        Welcome, Saravana Muthu Kumar S{userName}!
+        Welcome, {userName}!
       </div>
 
       <div className="bg-white p-3 rounded-lg shadow-sm space-y-3 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {/* Year Selector */}
           <div>
-            <label
-              htmlFor="year"
-              className="block text-xs font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="year" className="block text-xs font-medium text-gray-700 mb-1">
               Select Year
             </label>
             <select
@@ -62,10 +110,7 @@ export default function ConsolidationReport() {
 
           {/* From Month Selector */}
           <div>
-            <label
-              htmlFor="fromMonth"
-              className="block text-xs font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="fromMonth" className="block text-xs font-medium text-gray-700 mb-1">
               Select From Month
             </label>
             <select
@@ -86,10 +131,7 @@ export default function ConsolidationReport() {
 
           {/* To Month Selector */}
           <div>
-            <label
-              htmlFor="toMonth"
-              className="block text-xs font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="toMonth" className="block text-xs font-medium text-gray-700 mb-1">
               Select To Month
             </label>
             <select
@@ -110,50 +152,32 @@ export default function ConsolidationReport() {
 
           {/* Client Selector */}
           <div>
-            <label
-              htmlFor="client"
-              className="block text-xs font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="client" className="block text-xs font-medium text-gray-700 mb-1">
               Select Client
             </label>
-            <select
+            <Select
               id="client"
-              className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
-              value={selectedClient}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                setSelectedClient(e.target.value);
-              }}
-            >
-              {dummyClients.map((client) => (
-                <option key={client} value={client}>
-                  {client}
-                </option>
-              ))}
-            </select>
+              className="text-sm"
+              value={selectedClient} // React-Select value
+              onChange={(selectedOption) => setSelectedClient(selectedOption)} // Handle selection change
+              options={clientOptions} // Options passed to react-select
+              isClearable={true} // Optional: adds a clear button to the select input
+            />
           </div>
 
-          {/* Project Selector */}
+          {/* Project Selector (Updated to React-Select) */}
           <div>
-            <label
-              htmlFor="project"
-              className="block text-xs font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="project" className="block text-xs font-medium text-gray-700 mb-1">
               Select Project
             </label>
-            <select
+            <Select
               id="project"
-              className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
-              value={selectedProject}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                setSelectedProject(e.target.value);
-              }}
-            >
-              {dummyProjects!.map((project) => (
-                <option key={project.id} value={project.name}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
+              className="text-sm"
+              value={selectedProject} // React-Select value
+              onChange={(selectedOption) => setSelectedProject(selectedOption)} // Handle selection change
+              options={projectOptions} // Options passed to react-select
+              isClearable={true} // Optional: adds a clear button to the select input
+            />
           </div>
 
           {/* Filter Button */}
@@ -179,7 +203,7 @@ export default function ConsolidationReport() {
         </div>
       </div>
 
-      {dummyBoolean ? (
+      {timeSheet.length > 0 ? (
         <Comparator excelData={excelData} setExcelData={setExcelData} />
       ) : (
         <p className="text-center text-gray-600 font-semibold py-4">

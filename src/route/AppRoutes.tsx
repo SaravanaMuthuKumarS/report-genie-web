@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "../layout/AppLayout";
-import AuthContextProvider from "../context/AuthContextProvider";
 import PrivateRoute from "./PrivateRoute";
 import {
   ROOT_ROUTE,
@@ -18,37 +17,17 @@ import FinanceReport from "../pages/FinanceReport";
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path={HOME_ROUTE} element={<Home />}>
-      <Route path="consolidation" element={<ConsolidationReport />} />
-      <Route path="reports" element={<FinanceReport />} />
-      <Route index element={<Welcome />} />
+      <Route element={<PrivateRoute />}>
+        <Route path={HOME_ROUTE} element={<Home />}>
+          <Route path="consolidation" element={<ConsolidationReport />} />
+          <Route path="reports" element={<FinanceReport />} />
+          <Route index element={<Welcome />} />
+        </Route>
       </Route>
       <Route path={ROOT_ROUTE} element={<AppLayout />}>
-        <Route
-          path={LOGIN_ROUTE}
-          element={
-            <AuthContextProvider>
-              <Login />
-            </AuthContextProvider>
-          }
-        />
-        <Route
-          path={SIGNUP_ROUTE}
-          element={
-            <AuthContextProvider>
-              <SignIn />
-            </AuthContextProvider>
-          }
-        />
+        <Route path={LOGIN_ROUTE} element={<Login />} />
+        <Route path={SIGNUP_ROUTE} element={<SignIn />} />
         <Route index element={<Navigate to={LOGIN_ROUTE} replace />} />
-        <Route
-          element={
-            <AuthContextProvider>
-              <PrivateRoute />
-            </AuthContextProvider>
-          }
-        ></Route>
       </Route>
-    </Routes>
-  );
+    </Routes>);
 }

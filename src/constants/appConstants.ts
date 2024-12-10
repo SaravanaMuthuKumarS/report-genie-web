@@ -32,6 +32,8 @@ export const dummyProjects: Project[] = [
 export const reportedProjects: ReportedProject[] = [
   {
     id: "1", name: "IAssistant", timesheet: [{
+      id: "2",
+
       name: "Saravana",
       project: "Icore",
       billable: 40,
@@ -40,6 +42,8 @@ export const reportedProjects: ReportedProject[] = [
       totalHours: 50,
     },
     {
+      id: "1",
+
       name: "Yogitaa",
       project: "Icore",
       billable: 30,
@@ -50,6 +54,8 @@ export const reportedProjects: ReportedProject[] = [
   },
   {
     id: "2", name: "Web3.0", timesheet: [{
+      id: "2",
+
       name: "Saravana",
       project: "Icore",
       billable: 40,
@@ -58,6 +64,8 @@ export const reportedProjects: ReportedProject[] = [
       totalHours: 50,
     },
     {
+      id: "1",
+
       name: "Yogitaa",
       project: "Icore",
       billable: 30,
@@ -68,6 +76,8 @@ export const reportedProjects: ReportedProject[] = [
   },
   {
     id: "3", name: "Roshe", timesheet: [{
+      id: "2",
+
       name: "Saravana",
       project: "Icore",
       billable: 40,
@@ -76,6 +86,7 @@ export const reportedProjects: ReportedProject[] = [
       totalHours: 50,
     },
     {
+      id: "1",
       name: "Yogitaa",
       project: "Icore",
       billable: 30,
@@ -86,6 +97,7 @@ export const reportedProjects: ReportedProject[] = [
   },
   {
     id: "4", name: "Med-Lab", timesheet: [{
+      id: "2",
       name: "Saravana",
       project: "Icore",
       billable: 40,
@@ -94,6 +106,7 @@ export const reportedProjects: ReportedProject[] = [
       totalHours: 50,
     },
     {
+      id: "1",
       name: "Yogitaa",
       project: "Icore",
       billable: 30,
@@ -147,8 +160,8 @@ export const predefinedData = [
 ];
 
 export const predefinedHeaders = [
+  "Emp-Id",
   "Employee Name",
-  "Project",
   "Billable",
   "Non-Billable",
   "No. of Leaves",

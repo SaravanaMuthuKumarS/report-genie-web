@@ -11,12 +11,13 @@ export const AuthContext = createContext<AuthContextType>({
   isRetry: false,
   accessToken: "",
   setUserName: () => { },
+  setRetry: () => { },
   setIsAuthenticated: () => { },
   setIsFinance: () => { },
   handleLogin: () => { },
   handleSignup: () => { },
   isDataUploaded: false,
-  setIsDataUploaded: () => {},
+  setIsDataUploaded: () => { },
 });
 
 export default function AuthContextProvider({
@@ -25,7 +26,7 @@ export default function AuthContextProvider({
   children: React.ReactNode;
 }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isFinance, setIsFinance] = useState<boolean>(true);
+  const [isFinance, setIsFinance] = useState<boolean>(false);
   const [isRetry, setRetry] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("");
   const [accessToken, setAccessToken] = useState<string>("");
@@ -34,28 +35,30 @@ export default function AuthContextProvider({
   const { mutate: signupMutate } = useSignup();
   const navigate = useNavigate();
 
-  async function handleSignup({ 
-    fullName, 
+  async function handleSignup({
+    fullName,
     password,
-    mailId, 
-    projects, 
+    mailId,
+    projects,
     isFinance
-  } :
-  {
-    fullName: string;
-    password: string;
-    mailId: string;
-    projects: {id:string}[];
-    isFinance: boolean;
-  }) {
+  }:
+    {
+      fullName: string;
+      password: string;
+      mailId: string;
+      projects: { id: string }[];
+      isFinance: boolean;
+    }) {
     try {
       await signupMutate({ fullName, password, mailId, projects, isFinance },
         {
           onSuccess: () => {
             const token: string = localStorage.getItem("accessToken")!;
+            setIsAuthenticated(true);
             setAccessToken(token);
             setUserName(mailId);
             setRetry(false);
+            setIsFinance("true" === localStorage.getItem("role"));
             navigate(HOME_ROUTE);
           },
         }
@@ -65,7 +68,6 @@ export default function AuthContextProvider({
       localStorage.removeItem("accessToken");
       alert("Username Password Mismatch");
     }
-    
   }
 
   async function handleLogin({
@@ -81,9 +83,14 @@ export default function AuthContextProvider({
           onSuccess: () => {
             const token: string = localStorage.getItem("accessToken")!;
             setAccessToken(token);
+            setIsAuthenticated(true);
             setUserName(username);
             setRetry(false);
+            setIsFinance("true" === localStorage.getItem("role"));
             navigate(HOME_ROUTE);
+          },
+          onError: () => {
+            setRetry(true);
           },
         }
       );
@@ -103,6 +110,7 @@ export default function AuthContextProvider({
         accessToken,
         userName,
         isFinance,
+        setRetry,
         setIsFinance,
         setUserName,
         handleLogin,

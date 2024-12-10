@@ -4,6 +4,7 @@ export interface AuthContextType {
     userName: string;
     isRetry: boolean;
     accessToken: string;
+    setRetry: (retry: boolean) => void;
     setUserName: (userName: string) => void;
     setIsAuthenticated: (isAuthenticated: boolean) => void;
     setIsFinance: (isAdmin: boolean) => void;
@@ -19,7 +20,7 @@ export interface AuthContextType {
         fullName, 
         password,
         mailId, 
-        projects, 
+        projects,
         isFinance
       } :
       {
@@ -56,8 +57,18 @@ export interface ConsolidatedProjects {
 }
 
 export interface TimeSheet {
+  id: string;
   name: string;
   project: string;
+  billable: number;
+  nonBillable: number;
+  leaves: number;
+  totalHours: number;
+}
+
+export interface ExcelRow {
+  id: string; 
+  name: string;
   billable: number;
   nonBillable: number;
   leaves: number;

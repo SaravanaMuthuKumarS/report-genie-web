@@ -87,12 +87,10 @@ export default function FinanceReport() {
     }));
   };
 
-
-
   return (
     <div className="p-6 w-full bg-gray-100">
       <div className="mt-2 text-3xl font-medium text-gray-700">
-        Welcome Saravana Muthu Kumar S {userName}!
+        Welcome, {userName}!
       </div>
       <div className="flex-1 p-4">
         <div className="flex items-center space-x-6 mt-4">

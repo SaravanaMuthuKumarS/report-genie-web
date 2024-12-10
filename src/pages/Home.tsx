@@ -6,7 +6,7 @@ import { HOME_ROUTE } from "../constants/appConstants";
 import { AuthContextType } from "../types/appTypes";
 
 export default function Home() {
-  const { isFinance } = useContext<AuthContextType>(AuthContext);
+  const { isFinance, setIsAuthenticated } = useContext<AuthContextType>(AuthContext);
   const navigate = useNavigate();
 
   return (
@@ -26,7 +26,7 @@ export default function Home() {
           >
             Home
           </li>
-          {false ? (
+          {!isFinance ? (
             <li
               className="hover:bg-blue-600 p-3 rounded-md cursor-pointer transition duration-300 ease-in-out transform hover:scale-105"
               onClick={() => navigate("consolidation")}
@@ -58,6 +58,16 @@ export default function Home() {
             onClick={() => {}}
           >
             Contact
+          </li>
+          <li
+            className="hover:bg-blue-600 p-3 rounded-md cursor-pointer transition duration-300 ease-in-out transform hover:scale-105"
+            onClick={() => {
+              setIsAuthenticated(false);
+              localStorage.removeItem("accessToken");
+              localStorage.removeItem("role");
+            }}
+          >
+            Logout
           </li>
         </ul>
       </div>
